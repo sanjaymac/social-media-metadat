@@ -1,0 +1,7 @@
+streamlit
+instaloader
+pandas
+requests
+yt-dlp
+beautifulsoup4
+concurrent.futures
