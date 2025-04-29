@@ -13,7 +13,9 @@ import json
 # ---------------- TikTok Metadata ----------------
 
 
-def get_tiktok_data(url):
+def get_tiktok_data(url, use_vpn=False):
+    ...
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
