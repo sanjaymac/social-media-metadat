@@ -219,6 +219,10 @@ with tabs[1]:
             st.info("Processing YouTube videos...")
             with ThreadPoolExecutor(max_workers=10) as executor:
                 results = list(executor.map(get_youtube_video_details, urls))
+            for i, url in enumerate(urls, start=1):
+                result = get_tiktok_data(url, use_vpn)
+                results.append(result)
+                progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
@@ -238,6 +242,10 @@ with tabs[2]:
             st.info("Processing Dailymotion videos...")
             with ThreadPoolExecutor(max_workers=10) as executor:
                 results = list(executor.map(get_dailymotion_video_details, urls))
+            for i, url in enumerate(urls, start=1):
+                result = get_tiktok_data(url, use_vpn)
+                results.append(result)
+                progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
@@ -257,6 +265,10 @@ with tabs[3]:
             st.info("Processing ShareChat videos...")
             with ThreadPoolExecutor(max_workers=10) as executor:
                 results = list(executor.map(get_sharechat_video_details, urls))
+            for i, url in enumerate(urls, start=1):
+                result = get_tiktok_data(url, use_vpn)
+                results.append(result)
+                progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
