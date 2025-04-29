@@ -45,45 +45,7 @@ def get_tiktok_data(url, use_vpn=False):
         return {"URL": url, "Play Count": None, "Create Time (IST)": None}
 
 # ---------------- Instagram Reel Metadata ----------------
-def get_reel_details(reel_url):
-    L = instaloader.Instaloader()
-    try:
-        shortcode = (
-            reel_url.rstrip("/").split("/")[-1]
-            if "reel" in reel_url
-            else reel_url.rstrip("/").split("/")[-2]
-        )
-        post = instaloader.Post.from_shortcode(L.context, shortcode)
-        
-        tagged_users = []
-        if post.tagged_users:
-            for user in post.tagged_users:
-                if isinstance(user, str):
-                    tagged_users.append(user)
-                elif hasattr(user, "username"):
-                    tagged_users.append(user.username)
-                else:
-                    tagged_users.append(str(user))
 
-        reel_data = {
-            "Reel URL": reel_url,
-            "Username": post.owner_username,
-            "Profile URL": f"https://www.instagram.com/{post.owner_username}/",
-            "Reel Caption": post.caption or "No caption",
-            "Hashtags": ", ".join(post.caption_hashtags) if post.caption else "",
-            "Timestamp": post.date_utc.strftime("%Y-%m-%d %H:%M:%S"),
-            "Views": post.video_view_count,
-            "Likes": post.likes,
-            "Comments": post.comments,
-            "Tagged Users": ", ".join(tagged_users),
-            "Mentions": ", ".join(post.caption_mentions) if post.caption else "",
-            "Video URL": post.video_url if post.is_video else "Not a video",
-            "Post Type": "Reel" if post.is_video else "Image Post",
-            "Location": post.location.name if post.location else "No location",
-        }
-        return reel_data
-    except Exception as e:
-        return {"Reel URL": reel_url, "Error": str(e)}
 
 # ---------------- YouTube Video Metadata ----------------
 def get_youtube_video_details(video_url):
@@ -209,7 +171,6 @@ st.write("Select a tab to scrape metadata from different platforms.")
 
 tabs = st.tabs([
     "TikTok Metadata",
-    "Instagram Reel Metadata",
     "YouTube Video Metadata",
     "Dailymotion Video Metadata",
     "ShareChat Video Metadata"
@@ -236,26 +197,9 @@ with tabs[0]:
             st.error("Please enter at least one TikTok URL.")
 
 # --------------- Tab 2: Instagram ----------------
-with tabs[1]:
-    st.header("Instagram Reel Metadata Retriever")
-    inst_urls_input = st.text_area("Enter Instagram Reel URLs:")
-    
-    if st.button("Process Instagram Reels"):
-        urls = [url.strip() for url in inst_urls_input.splitlines() if url.strip()]
-        if urls:
-            st.info("Processing Instagram reels...")
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                results = list(executor.map(get_reel_details, urls))
-            df = pd.DataFrame(results)
-            st.success("Done!")
-            st.dataframe(df)
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("Download CSV", data=csv, file_name="instagram_reels_metadata.csv", mime="text/csv")
-        else:
-            st.error("Please enter at least one URL.")
 
 # --------------- Tab 3: YouTube ----------------
-with tabs[2]:
+with tabs[1]:
     st.header("YouTube Video Metadata Retriever")
     yt_urls_input = st.text_area("Enter YouTube Video URLs:")
     
@@ -274,7 +218,7 @@ with tabs[2]:
             st.error("Please enter at least one URL.")
 
 # --------------- Tab 4: Dailymotion ----------------
-with tabs[3]:
+with tabs[2]:
     st.header("Dailymotion Video Metadata Retriever")
     dm_urls_input = st.text_area("Enter Dailymotion URLs:")
     
@@ -293,7 +237,7 @@ with tabs[3]:
             st.error("Please enter at least one URL.")
 
 # --------------- Tab 5: ShareChat ----------------
-with tabs[4]:
+with tabs[3]:
     st.header("ShareChat Video Metadata Retriever")
     sc_urls_input = st.text_area("Enter ShareChat URLs:")
     
