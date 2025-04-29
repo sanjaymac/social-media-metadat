@@ -186,8 +186,14 @@ with tabs[0]:
         urls = [url.strip() for url in tiktok_urls_input.splitlines() if url.strip()]
         if urls:
             st.info("Processing TikTok videos...")
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                results = list(executor.map(lambda u: get_tiktok_data(u, use_vpn), urls))
+            progress_text = st.empty()
+            results = []
+
+            for i, url in enumerate(urls, start=1):
+                result = get_tiktok_data(url, use_vpn)
+                results.append(result)
+                progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
+
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
@@ -195,6 +201,7 @@ with tabs[0]:
             st.download_button("Download CSV", data=csv, file_name="tiktok_metadata.csv", mime="text/csv")
         else:
             st.error("Please enter at least one TikTok URL.")
+
 
 # --------------- Tab 2: Instagram ----------------
 
