@@ -11,22 +11,28 @@ from yt_dlp import YoutubeDL
 import json
 
 # ---------------- TikTok Metadata ----------------
-def get_tiktok_data(url, use_vpn=False):
+
+
+def get_tiktok_data(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
     try:
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code != 200:
             return {"URL": url, "Play Count": None, "Create Time (IST)": None}
         
-        soup = BeautifulSoup(response.content, 'html.parser')
-        html_text = str(soup)
+        html_text = response.text
 
-        play_count_match = re.search(r'"playCount":(\d+),', html_text)
-        create_time_match = re.search(r'"createTime":"?(\d+)"?,', html_text)
+        # Match the stats block and extract play count
+        stats_match = re.search(r'"stats":\s*{[^}]+}', html_text)
+        play_count = None
+        if stats_match:
+            play_count_match = re.search(r'"playCount":\s*(\d+)', stats_match.group(0))
+            if play_count_match:
+                play_count = play_count_match.group(1)
 
-        play_count = play_count_match.group(1) if play_count_match else None
+        create_time_match = re.search(r'"createTime":"?(\d+)"?', html_text)
         create_time = create_time_match.group(1) if create_time_match else None
 
         if create_time:
@@ -43,6 +49,7 @@ def get_tiktok_data(url, use_vpn=False):
         }
     except Exception as e:
         return {"URL": url, "Play Count": None, "Create Time (IST)": None}
+
 
 # ---------------- Instagram Reel Metadata ----------------
 
