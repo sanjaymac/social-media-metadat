@@ -209,20 +209,25 @@ with tabs[0]:
 # --------------- Tab 2: Instagram ----------------
 
 # --------------- Tab 3: YouTube ----------------
+# --------------- Tab 2: YouTube ----------------
 with tabs[1]:
     st.header("YouTube Video Metadata Retriever")
     yt_urls_input = st.text_area("Enter YouTube Video URLs:")
-    
+
     if st.button("Process YouTube Videos"):
         urls = [url.strip() for url in yt_urls_input.splitlines() if url.strip()]
         if urls:
             st.info("Processing YouTube videos...")
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                results = list(executor.map(get_youtube_video_details, urls))
+            results = []
+            progress_bar = st.progress(0)
+            progress_text = st.empty()
+
             for i, url in enumerate(urls, start=1):
-                result = get_tiktok_data(url, use_vpn)
+                result = get_youtube_video_details(url)
                 results.append(result)
+                progress_bar.progress(i / len(urls))
                 progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
+
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
@@ -231,21 +236,25 @@ with tabs[1]:
         else:
             st.error("Please enter at least one URL.")
 
-# --------------- Tab 4: Dailymotion ----------------
+# --------------- Tab 3: Dailymotion ----------------
 with tabs[2]:
     st.header("Dailymotion Video Metadata Retriever")
     dm_urls_input = st.text_area("Enter Dailymotion URLs:")
-    
+
     if st.button("Process Dailymotion Videos"):
         urls = [url.strip() for url in dm_urls_input.splitlines() if url.strip()]
         if urls:
             st.info("Processing Dailymotion videos...")
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                results = list(executor.map(get_dailymotion_video_details, urls))
+            results = []
+            progress_bar = st.progress(0)
+            progress_text = st.empty()
+
             for i, url in enumerate(urls, start=1):
-                result = get_tiktok_data(url, use_vpn)
+                result = get_dailymotion_video_details(url)
                 results.append(result)
+                progress_bar.progress(i / len(urls))
                 progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
+
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
@@ -254,21 +263,25 @@ with tabs[2]:
         else:
             st.error("Please enter at least one URL.")
 
-# --------------- Tab 5: ShareChat ----------------
+# --------------- Tab 4: ShareChat ----------------
 with tabs[3]:
     st.header("ShareChat Video Metadata Retriever")
     sc_urls_input = st.text_area("Enter ShareChat URLs:")
-    
+
     if st.button("Process ShareChat Videos"):
         urls = [url.strip() for url in sc_urls_input.splitlines() if url.strip()]
         if urls:
             st.info("Processing ShareChat videos...")
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                results = list(executor.map(get_sharechat_video_details, urls))
+            results = []
+            progress_bar = st.progress(0)
+            progress_text = st.empty()
+
             for i, url in enumerate(urls, start=1):
-                result = get_tiktok_data(url, use_vpn)
+                result = get_sharechat_video_details(url)
                 results.append(result)
+                progress_bar.progress(i / len(urls))
                 progress_text.markdown(f"**{i}/{len(urls)} URLs processed**")
+
             df = pd.DataFrame(results)
             st.success("Done!")
             st.dataframe(df)
