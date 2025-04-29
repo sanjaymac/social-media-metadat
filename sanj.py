@@ -14,27 +14,21 @@ import json
 
 
 def get_tiktok_data(url, use_vpn=False):
-    ...
-
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
     try:
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code != 200:
             return {"URL": url, "Play Count": None, "Create Time (IST)": None}
         
-        html_text = response.text
+        soup = BeautifulSoup(response.content, 'html.parser')
+        html_text = str(soup)
 
-        # Match the stats block and extract play count
-        stats_match = re.search(r'"stats":\s*{[^}]+}', html_text)
-        play_count = None
-        if stats_match:
-            play_count_match = re.search(r'"playCount":\s*(\d+)', stats_match.group(0))
-            if play_count_match:
-                play_count = play_count_match.group(1)
+        play_count_match = re.search(r'"playCount":(\d+),', html_text)
+        create_time_match = re.search(r'"createTime":"?(\d+)"?,', html_text)
 
-        create_time_match = re.search(r'"createTime":"?(\d+)"?', html_text)
+        play_count = play_count_match.group(1) if play_count_match else None
         create_time = create_time_match.group(1) if create_time_match else None
 
         if create_time:
