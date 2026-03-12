@@ -408,7 +408,7 @@ def get_vk_video_details(url):
 
 # ---------------- Streamlit UI ----------------
 
-st.title("🌐 Social Media Metadata Extractor")
+st.title("Metadata Extractor")
 
 tabs = st.tabs([
     "TikTok",
