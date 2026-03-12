@@ -210,6 +210,201 @@ def get_sharechat_video_details(video_url):
     except Exception as e:
         return {"Video URL": video_url, "Error": str(e)}
 
+# ---------------- OK.RU ----------------
+
+def get_okru_video_details(url):
+
+    try:
+
+        headers = {"User-Agent": "Mozilla/5.0"}
+
+        res = requests.get(url, headers=headers, timeout=15)
+
+        html = res.text
+
+        title = ""
+        uploader = ""
+        profile_url = ""
+        followers = ""
+        views = ""
+        upload_date = ""
+
+        title_match = re.search(r'<h1 class="vp-layer-info_h textWrap">(.*?)</h1>', html, re.S)
+        if title_match:
+            title = title_match.group(1).strip()
+
+        name_match = re.search(r'name="([^"]+)"', html)
+        if name_match:
+            uploader = name_match.group(1)
+
+        url_match = re.search(r'url="([^"]+)"', html)
+        if url_match:
+            profile_url = "https://ok.ru" + url_match.group(1)
+
+        subs_match = re.search(r'subscriberscount="(\d+)"', html)
+        if subs_match:
+            followers = subs_match.group(1)
+
+        views_match = re.search(r'<span>\s*([\d\s,.]+)\s*</span>', html)
+        if views_match:
+            views = re.sub(r"\D", "", views_match.group(1))
+
+        date_match = re.search(r'<meta itemprop="uploadDate" content="([^"]+)"', html)
+        if date_match:
+            upload_date = date_match.group(1)
+
+        return {
+            "Video URL": url,
+            "Platform": "OK.ru",
+            "Title": title,
+            "Uploader": uploader,
+            "Profile URL": profile_url,
+            "Followers": followers,
+            "Views": views,
+            "Upload Date": upload_date
+        }
+
+    except Exception as e:
+        return {"Video URL": url, "Error": str(e)}
+
+
+# ---------------- VIDEA ----------------
+
+def get_videa_video_details(url):
+
+    try:
+
+        res = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
+
+        html = res.text
+
+        match = re.search(r'VIDEA\.pages\.play\(\s*(\{[\s\S]*?\})', html)
+
+        if not match:
+            return {"Video URL": url, "Error":"JSON not found"}
+
+        json_text = match.group(1).replace("\\/", "/")
+
+        data = json.loads(json_text)
+
+        video = data.get("video", {})
+
+        upload_date = ""
+
+        schema = re.search(r'"uploadDate"\s*:\s*"([^"]+)"', html)
+
+        if schema:
+            upload_date = schema.group(1)
+
+        return {
+            "Video URL": url,
+            "Platform": "Videa",
+            "Title": video.get("title"),
+            "Uploader": video.get("uploaderName"),
+            "Profile URL": "https://videa.hu"+video.get("uploaderUrl",""),
+            "Followers": video.get("followersCount"),
+            "Views": video.get("viewCount"),
+            "Upload Date": upload_date
+        }
+
+    except Exception as e:
+        return {"Video URL": url, "Error": str(e)}
+
+
+# ---------------- BITCHUTE ----------------
+
+def get_bitchute_video_details(url):
+
+    try:
+
+        res = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
+
+        html = res.text
+
+        title = ""
+        uploader = ""
+        profile = ""
+        upload_date = ""
+
+        title_match = re.search(r'<meta property="og:title" content="([^"]+)"', html)
+        if title_match:
+            title = title_match.group(1)
+
+        date_match = re.search(r'"uploadDate"\s*:\s*"([^"]+)"', html)
+        if date_match:
+            upload_date = date_match.group(1)
+
+        oembed = re.search(r'type="application/json\+oembed"[^>]+href="([^"]+)"', html)
+
+        if oembed:
+
+            r = requests.get(oembed.group(1))
+
+            data = r.json()
+
+            uploader = data.get("author_name")
+            profile = data.get("author_url")
+
+        return {
+            "Video URL": url,
+            "Platform": "BitChute",
+            "Title": title,
+            "Uploader": uploader,
+            "Profile URL": profile,
+            "Followers": "",
+            "Views": "",
+            "Upload Date": upload_date
+        }
+
+    except Exception as e:
+        return {"Video URL": url, "Error": str(e)}
+
+
+# ---------------- VK VIDEO ----------------
+
+def get_vk_video_details(url):
+
+    try:
+
+        res = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
+
+        html = res.text
+
+        title = ""
+        profile_url = ""
+        views = ""
+        followers = ""
+
+        id_match = re.search(r'video(-?\d+)_', url)
+
+        if id_match:
+
+            oid = id_match.group(1)
+
+            if oid.startswith("-"):
+                profile_url = "https://vk.com/public"+oid[1:]
+            else:
+                profile_url = "https://vk.com/id"+oid
+
+        title_match = re.search(r'property="og:title"\s+content="([^"]+)"', html)
+
+        if title_match:
+            title = title_match.group(1)
+
+        return {
+            "Video URL": url,
+            "Platform": "VK Video",
+            "Title": title,
+            "Uploader": "",
+            "Profile URL": profile_url,
+            "Followers": followers,
+            "Views": views,
+            "Upload Date": ""
+        }
+
+    except Exception as e:
+        return {"Video URL": url, "Error": str(e)}
+
 
 # ---------------- Streamlit UI ----------------
 
@@ -220,7 +415,8 @@ tabs = st.tabs([
     "Meta (Instagram / Facebook)",
     "YouTube",
     "Dailymotion",
-    "ShareChat"
+    "ShareChat",
+    "Other Video Platforms"
 ])
 
 
@@ -340,4 +536,43 @@ with tabs[4]:
             "Download CSV",
             df.to_csv(index=False),
             "sharechat_metadata.csv"
+        )
+
+# ---------------- Other Platforms ----------------
+
+with tabs[5]:
+
+    urls = st.text_area("Enter OK.ru / Videa / BitChute / VK Video URLs")
+
+    if st.button("Extract Other Platform Metadata"):
+
+        url_list = [u.strip() for u in urls.splitlines() if u.strip()]
+
+        results = []
+
+        for url in url_list:
+
+            if "ok.ru" in url:
+                results.append(get_okru_video_details(url))
+
+            elif "videa.hu" in url:
+                results.append(get_videa_video_details(url))
+
+            elif "bitchute.com" in url:
+                results.append(get_bitchute_video_details(url))
+
+            elif "vkvideo.ru" in url or "vk.com" in url:
+                results.append(get_vk_video_details(url))
+
+            else:
+                results.append({"Video URL": url, "Error":"Unsupported domain"})
+
+        df = pd.DataFrame(results)
+
+        st.dataframe(df, use_container_width=True)
+
+        st.download_button(
+            "Download CSV",
+            df.to_csv(index=False),
+            "other_platform_metadata.csv"
         )
