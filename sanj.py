@@ -22,12 +22,24 @@ def get_tiktok_data(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         html = str(soup)
 
+        # video metrics
         play_match = re.search(r'"playCount":(\d+),', html)
         time_match = re.search(r'"createTime":"?(\d+)"?,', html)
 
+        # author info
+        user_match = re.search(r'"uniqueId":"([^"]+)"', html)
+        follower_match = re.search(r'"followerCount":(\d+)', html)
+
         play = play_match.group(1) if play_match else None
         create = time_match.group(1) if time_match else None
+        username = user_match.group(1) if user_match else None
+        followers = follower_match.group(1) if follower_match else None
 
+        profile_url = None
+        if username:
+            profile_url = f"https://www.tiktok.com/@{username}"
+
+        # convert time
         if create:
             utc = datetime.utcfromtimestamp(int(create))
             ist = utc + timedelta(hours=5, minutes=30)
@@ -37,12 +49,19 @@ def get_tiktok_data(url):
 
         return {
             "URL": url,
+            "Username": username,
+            "Profile URL": profile_url,
+            "Followers": followers,
             "Play Count": play,
             "Create Time (IST)": ist_time
         }
 
-    except Exception:
-        return {"URL": url}
+    except Exception as e:
+
+        return {
+            "URL": url,
+            "Error": str(e)
+        }
 
 
 # ---------------- Meta (Instagram / Facebook) ----------------
