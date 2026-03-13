@@ -406,6 +406,60 @@ def get_vk_video_details(url):
         return {"Video URL": url, "Error": str(e)}
 
 
+# ---------------- Twitter / X Metadata ----------------
+
+def get_twitter_video_details(video_url):
+
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True
+    }
+
+    try:
+
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+
+        upload_date = info.get("upload_date")
+
+        if upload_date and len(upload_date) == 8:
+            upload_date = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}"
+
+        uploader = info.get("uploader")
+        uploader_id = info.get("uploader_id")
+
+        profile_url = None
+
+        if uploader_id:
+            profile_url = f"https://twitter.com/{uploader_id}"
+
+        return {
+
+            "Video URL": video_url,
+            "Platform": "Twitter / X",
+            "Title": info.get("title"),
+            "Uploader Name": uploader,
+            "Username": uploader_id,
+            "Profile URL": profile_url,
+            "Upload Date": upload_date,
+            "Duration (sec)": info.get("duration"),
+            "Views": info.get("view_count"),
+            "Likes": info.get("like_count"),
+            "Comments": info.get("comment_count"),
+            "Reposts": info.get("repost_count"),
+            "Thumbnail": info.get("thumbnail"),
+            "Description": info.get("description")
+
+        }
+
+    except Exception as e:
+
+        return {
+            "Video URL": video_url,
+            "Error": str(e)
+        }
+
+
 # ---------------- Streamlit UI ----------------
 
 st.title("Metadata Extractor")
@@ -416,6 +470,7 @@ tabs = st.tabs([
     "YouTube",
     "Dailymotion",
     "ShareChat",
+    "Twitter / X",
     "Other Video Platforms"
 ])
 
@@ -538,9 +593,32 @@ with tabs[4]:
             "sharechat_metadata.csv"
         )
 
-# ---------------- Other Platforms ----------------
+# ---------------- Twitter ----------------
 
 with tabs[5]:
+
+    urls = st.text_area("Enter Twitter / X Video URLs")
+
+    if st.button("Extract Twitter Metadata"):
+
+        url_list = [u.strip() for u in urls.splitlines() if u.strip()]
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = list(executor.map(get_twitter_video_details, url_list))
+
+        df = pd.DataFrame(results)
+
+        st.dataframe(df)
+
+        st.download_button(
+            "Download CSV",
+            df.to_csv(index=False),
+            "twitter_metadata.csv"
+        )
+
+# ---------------- Other Platforms ----------------
+
+with tabs[6]:
 
     urls = st.text_area("Enter OK.ru / Videa / BitChute / VK Video URLs")
 
